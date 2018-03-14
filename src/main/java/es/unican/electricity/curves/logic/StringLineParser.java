@@ -1,7 +1,9 @@
-package es.unican.electricity.curves.utils;
+package es.unican.electricity.curves.logic;
 
 import static org.apache.storm.utils.Utils.tuple;
 import java.util.Map;
+
+import es.unican.electricity.curves.data.Curve;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.BasicOutputCollector;
 import org.apache.storm.topology.IBasicBolt;
