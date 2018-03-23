@@ -1,6 +1,7 @@
 package es.unican.electricity.curves.data;
 
 import es.unican.electricity.curves.utils.Converter;
+import es.unican.electricity.curves.utils.ListUtils;
 
 import java.io.Serializable;
 import java.sql.Date;
@@ -87,5 +88,12 @@ public class Curve implements Serializable{
 
     public void setPrls(Integer[] prls) {
         this.prls = prls;
+    }
+
+    @Override
+    public String toString(){
+        return "Cups: "+cups+"\tDia: "+dia+"\tValues: "+ ListUtils.mkString(Arrays.asList(values), val -> val.toString(),",")+
+                "\tFlags: "+ListUtils.mkString(Arrays.asList(flags), val -> val.toString(),",")+
+                "\tPrelacion: "+ListUtils.mkString(Arrays.asList(prls), val -> val.toString(),",");
     }
 }

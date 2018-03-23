@@ -40,4 +40,9 @@ public class Profile implements Serializable{
     public void setValues(Double[] values) {
         this.values = values;
     }
+
+    @Override
+    public String toString(){
+        return "Date: "+date+"\tValues: "+values;
+    }
 }

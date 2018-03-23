@@ -67,4 +67,9 @@ public class Consumption implements Serializable {
     public void setPrl(Integer prl) {
         this.prl = prl;
     }
+
+    @Override
+    public String toString(){
+        return "Cups: "+cups+"\tDate From: "+d_from+"\tDate To: "+d_to+"\tValue: "+value+"\tPrl: "+prl;
+    }
 }
