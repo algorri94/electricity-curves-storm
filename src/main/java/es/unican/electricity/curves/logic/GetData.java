@@ -4,6 +4,7 @@ import es.unican.electricity.curves.data.Consumption;
 import es.unican.electricity.curves.data.Curve;
 import es.unican.electricity.curves.data.Profile;
 import es.unican.electricity.curves.utils.JDBCPool;
+import org.apache.commons.dbcp2.Utils;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.BasicOutputCollector;
 import org.apache.storm.topology.IBasicBolt;
@@ -14,6 +15,7 @@ import org.apache.storm.tuple.Tuple;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.Map;
 
 import static org.apache.storm.utils.Utils.tuple;
@@ -31,10 +33,17 @@ public class GetData implements IBasicBolt{
     @Override
     public void execute(Tuple tuple, BasicOutputCollector collector) {
         Connection conn = JDBCPool.connect();
-        Curve curve = (Curve) tuple.getValueByField("curve");
-        Consumption consumption = getConsumption(conn, curve);
-        Profile profile = getProfile(conn, curve);
-        collector.emit(tuple(curve, consumption, profile));
+        try {
+            Curve curve = (Curve) tuple.getValueByField("curve");
+            Consumption consumption = null;
+            consumption = getConsumption(conn, curve);
+            Profile profile = getProfile(conn, curve);
+            if(consumption != null) collector.emit(tuple(curve, consumption, profile));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            Utils.closeQuietly(conn);
+        }
     }
 
     @Override
@@ -52,27 +61,20 @@ public class GetData implements IBasicBolt{
         return null;
     }
 
-    private Consumption getConsumption(Connection conn, Curve record) {
+    private Consumption getConsumption(Connection conn, Curve record) throws SQLException {
         Consumption c = null;
-        try {
-            c = new Consumption(conn.createStatement()
-                    .executeQuery("SELECT * FROM consumos WHERE cups='"+record.getCups()+"' AND f_desde<='"+
-                            record.getStringPreviousYear()+"' AND f_hasta>='"+record.getStringPreviousYear()+"' LIMIT 1"));
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        ResultSet rs = conn.createStatement()
+                .executeQuery("SELECT * FROM consumos WHERE cups='"+record.getCups()+"' AND f_desde<='"+
+                        record.getStringPreviousYear()+"' AND f_hasta>='"+record.getStringPreviousYear()+"' LIMIT 1");
+        if (rs.next()) c = new Consumption(rs);
         return c;
     }
 
-    private Profile getProfile(Connection conn, Curve record) {
+    private Profile getProfile(Connection conn, Curve record) throws SQLException {
         Profile p = null;
-        try {
-            ResultSet resultProf = conn.createStatement()
-                    .executeQuery("SELECT * FROM perfiles WHERE fecha='"+record.getDia()+"' LIMIT 1");
-            p = new Profile(resultProf);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        ResultSet rs = conn.createStatement()
+                .executeQuery("SELECT * FROM perfiles WHERE fecha='"+record.getDia()+"' LIMIT 1");
+        if(rs.next()) p = new Profile(rs);
         return p;
     }
 }

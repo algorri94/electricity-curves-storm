@@ -16,6 +16,8 @@ public class Consumption implements Serializable {
     private Integer value;
     private Integer prl;
 
+    public Consumption(){}
+
     public Consumption(String cups, Date d_from, Date d_to, Integer value, Integer prl){
         this.cups = cups;
         this.d_from = d_from;
@@ -25,7 +27,7 @@ public class Consumption implements Serializable {
     }
 
     public Consumption (ResultSet resultSet) throws SQLException {
-        this(resultSet.getString(1), resultSet.getDate(2), resultSet.getDate(3), resultSet.getInt(4), resultSet.getInt(5));
+        this(resultSet.getString(2), resultSet.getDate(3), resultSet.getDate(4), resultSet.getInt(5), resultSet.getInt(6));
     }
 
     public String getCups() {

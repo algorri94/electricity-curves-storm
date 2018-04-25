@@ -20,6 +20,7 @@ public class Curve implements Serializable{
     private Double[] values;
     private Integer[] flags;
     private Integer[] prls;
+    private Date created;
 
     public Curve(){}
 
@@ -38,6 +39,7 @@ public class Curve implements Serializable{
             this.values = Converter.stringArrayToDoubleArray(Arrays.copyOfRange(lines, 2, 27));
             this.flags = Converter.stringArrayToIntArray(Arrays.copyOfRange(lines, 27, 52));
             this.prls = Converter.stringArrayToIntArray(Arrays.copyOfRange(lines, 52, 77));
+            this.created = new Date(Long.parseLong(lines[77]));
         } catch (ParseException e) {
             e.printStackTrace();
         }
@@ -88,6 +90,14 @@ public class Curve implements Serializable{
 
     public void setPrls(Integer[] prls) {
         this.prls = prls;
+    }
+
+    public Date getCreated() {
+        return created;
+    }
+
+    public void setCreated(Date created) {
+        this.created = created;
     }
 
     @Override

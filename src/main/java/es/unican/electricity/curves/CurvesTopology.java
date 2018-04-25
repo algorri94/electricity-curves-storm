@@ -31,20 +31,22 @@ public class CurvesTopology {
         config.registerSerialization(Curve.class);
         config.registerSerialization(Consumption.class);
         config.registerSerialization(Profile.class);
+        config.setNumWorkers(5);
 
         TopologyBuilder builder = new TopologyBuilder();
         //Spout that reads data from Kafka
         builder.setSpout(KAFKA_SPOUT, new KafkaSpout(KafkaSpoutConfig.builder(CurvesConstants.KAFKA_SERVERS,
                 "electricity-curves")
-                .setProp(ConsumerConfig.GROUP_ID_CONFIG, "stormPollution").build()), 1);
+                .setProp(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, true)
+                .setProp(ConsumerConfig.GROUP_ID_CONFIG, "electricity").build()), 8);
         //Bolt that parses the data received from Kafka
-        builder.setBolt(PARSER_BOLT, new StringLineParser()).shuffleGrouping(KAFKA_SPOUT);
+        builder.setBolt(PARSER_BOLT, new StringLineParser(), 4).shuffleGrouping(KAFKA_SPOUT);
         //Bolt that gets the data needed to recalculate the curve
-        builder.setBolt(GET_DATA_BOLT, new GetData()).shuffleGrouping(PARSER_BOLT);
+        builder.setBolt(GET_DATA_BOLT, new GetData(), 12).shuffleGrouping(PARSER_BOLT);
         //Bolt that recalculates the curve
-        builder.setBolt(RECALCULATE_CURVE_BOLT, new RecalculateCurve()).shuffleGrouping(GET_DATA_BOLT);
+        builder.setBolt(RECALCULATE_CURVE_BOLT, new RecalculateCurve(), 4).shuffleGrouping(GET_DATA_BOLT);
         //Bolt that saves the curve
-        builder.setBolt(SAVE_CURVE_BOLT, new SaveCurve()).shuffleGrouping(RECALCULATE_CURVE_BOLT);
+        builder.setBolt(SAVE_CURVE_BOLT, new SaveCurve(), 12).shuffleGrouping(RECALCULATE_CURVE_BOLT);
 
 
         StormSubmitter.submitTopology("electricity-curves", config, builder.createTopology());

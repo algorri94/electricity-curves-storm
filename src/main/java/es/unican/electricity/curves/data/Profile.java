@@ -13,6 +13,8 @@ public class Profile implements Serializable{
     private Date date;
     private Double[] values;
 
+    public Profile(){}
+
     public Profile(Date date, Double[] values) {
         this.date = date;
         this.values = values;
