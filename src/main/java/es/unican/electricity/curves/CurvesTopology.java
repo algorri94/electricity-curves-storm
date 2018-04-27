@@ -38,7 +38,7 @@ public class CurvesTopology {
         builder.setSpout(KAFKA_SPOUT, new KafkaSpout(KafkaSpoutConfig.builder(CurvesConstants.KAFKA_SERVERS,
                 "electricity-curves")
                 .setProp(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, true)
-                .setProp(ConsumerConfig.GROUP_ID_CONFIG, "electricity").build()), 8);
+                .setProp(ConsumerConfig.GROUP_ID_CONFIG, "curve-processor").build()), 8);
         //Bolt that parses the data received from Kafka
         builder.setBolt(PARSER_BOLT, new StringLineParser(), 4).shuffleGrouping(KAFKA_SPOUT);
         //Bolt that gets the data needed to recalculate the curve
