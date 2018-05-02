@@ -15,7 +15,7 @@ import org.apache.storm.tuple.Tuple;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.apache.storm.utils.Utils.tuple;
@@ -25,9 +25,11 @@ import static org.apache.storm.utils.Utils.tuple;
  */
 public class GetData implements IBasicBolt{
 
+    Map<String, Profile> perfiles;
+
     @Override
     public void prepare(Map map, TopologyContext topologyContext) {
-
+        perfiles = new HashMap<>();
     }
 
     @Override
@@ -72,9 +74,14 @@ public class GetData implements IBasicBolt{
 
     private Profile getProfile(Connection conn, Curve record) throws SQLException {
         Profile p = null;
-        ResultSet rs = conn.createStatement()
-                .executeQuery("SELECT * FROM perfiles WHERE fecha='"+record.getDia()+"' LIMIT 1");
-        if(rs.next()) p = new Profile(rs);
+        if(perfiles.get(record.getDia().toString())!=null) {
+            p = perfiles.get(record.getDia().toString());
+        } else {
+            ResultSet rs = conn.createStatement()
+                    .executeQuery("SELECT * FROM perfiles WHERE fecha='" + record.getDia() + "' LIMIT 1");
+            if (rs.next()) p = new Profile(rs);
+            perfiles.put(record.getDia().toString(),p);
+        }
         return p;
     }
 }

@@ -27,7 +27,7 @@ public class Consumption implements Serializable {
     }
 
     public Consumption (ResultSet resultSet) throws SQLException {
-        this(resultSet.getString(2), resultSet.getDate(3), resultSet.getDate(4), resultSet.getInt(5), resultSet.getInt(6));
+        this(resultSet.getString(1), resultSet.getDate(2), resultSet.getDate(3), resultSet.getInt(4), resultSet.getInt(5));
     }
 
     public String getCups() {
