@@ -21,6 +21,9 @@ public class Curve implements Serializable{
     private Integer[] flags;
     private Integer[] prls;
     private Date created;
+    private Long before_select_consumption;
+    private Long after_select_consumption;
+    private Long after_select_profile;
 
     public Curve(){}
 
@@ -45,11 +48,11 @@ public class Curve implements Serializable{
         }
     }
 
-    public String getStringPreviousYear(){
+    public Date getPreviousYear(){
         Calendar cal = Calendar.getInstance();
         cal.setTime(dia);
         cal.add(Calendar.YEAR, -1);
-        return new SimpleDateFormat("yyyy-MM-dd").format(cal.getTime());
+        return new Date(cal.getTime().getTime());
     }
 
     public String getCups() {
@@ -98,6 +101,30 @@ public class Curve implements Serializable{
 
     public void setCreated(Date created) {
         this.created = created;
+    }
+
+    public Long getBefore_select_consumption() {
+        return before_select_consumption;
+    }
+
+    public void setBefore_select_consumption(Long before_select_consumption) {
+        this.before_select_consumption = before_select_consumption;
+    }
+
+    public Long getAfter_select_consumption() {
+        return after_select_consumption;
+    }
+
+    public void setAfter_select_consumption(Long after_select_consumption) {
+        this.after_select_consumption = after_select_consumption;
+    }
+
+    public Long getAfter_select_profile() {
+        return after_select_profile;
+    }
+
+    public void setAfter_select_profile(Long after_select_profile) {
+        this.after_select_profile = after_select_profile;
     }
 
     @Override

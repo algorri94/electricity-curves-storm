@@ -11,8 +11,10 @@ import org.apache.storm.topology.IBasicBolt;
 import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
+import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -37,10 +39,14 @@ public class GetData implements IBasicBolt{
         Connection conn = JDBCPool.connect();
         try {
             Curve curve = (Curve) tuple.getValueByField("curve");
-            Consumption consumption = null;
-            consumption = getConsumption(conn, curve);
+            curve.setBefore_select_consumption(System.currentTimeMillis());
+            Consumption consumption = getConsumption(conn, curve);
+            curve.setAfter_select_consumption(System.currentTimeMillis());
             Profile profile = getProfile(conn, curve);
-            if(consumption != null) collector.emit(tuple(curve, consumption, profile));
+            curve.setAfter_select_profile(System.currentTimeMillis());
+            if(consumption != null) {
+                collector.emit(tuple(curve, consumption, profile));
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
@@ -65,10 +71,14 @@ public class GetData implements IBasicBolt{
 
     private Consumption getConsumption(Connection conn, Curve record) throws SQLException {
         Consumption c = null;
+        Date previousYear = record.getPreviousYear();
         ResultSet rs = conn.createStatement()
-                .executeQuery("SELECT * FROM consumos WHERE cups='"+record.getCups()+"' AND f_desde<='"+
-                        record.getStringPreviousYear()+"' AND f_hasta>='"+record.getStringPreviousYear()+"' LIMIT 1");
-        if (rs.next()) c = new Consumption(rs);
+                .executeQuery("SELECT * FROM consumos WHERE cups='"+record.getCups()+"'");
+        while(rs.next() && c == null){
+            if(rs.getDate(2).compareTo(previousYear) <= 0 && rs.getDate(3).compareTo(previousYear) >= 0){
+                c = new Consumption(rs);
+            }
+        }
         return c;
     }
 
@@ -78,7 +88,7 @@ public class GetData implements IBasicBolt{
             p = perfiles.get(record.getDia().toString());
         } else {
             ResultSet rs = conn.createStatement()
-                    .executeQuery("SELECT * FROM perfiles WHERE fecha='" + record.getDia() + "' LIMIT 1");
+                    .executeQuery("SELECT * FROM perfiles WHERE fecha='" + record.getDia() + "'");
             if (rs.next()) p = new Profile(rs);
             perfiles.put(record.getDia().toString(),p);
         }
