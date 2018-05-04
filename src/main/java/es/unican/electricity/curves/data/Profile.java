@@ -1,5 +1,7 @@
 package es.unican.electricity.curves.data;
 
+import com.datastax.driver.core.Row;
+
 import java.io.Serializable;
 import java.sql.Date;
 import java.sql.ResultSet;
@@ -25,6 +27,12 @@ public class Profile implements Serializable{
                 rs.getDouble(8), rs.getDouble(9), rs.getDouble(10), rs.getDouble(11), rs.getDouble(12), rs.getDouble(13), rs.getDouble(14),
                 rs.getDouble(15), rs.getDouble(16), rs.getDouble(17), rs.getDouble(18), rs.getDouble(19), rs.getDouble(20), rs.getDouble(21),
                 rs.getDouble(22), rs.getDouble(23), rs.getDouble(24), rs.getDouble(25), rs.getDouble(26)});
+    }
+    public Profile(Row rs){
+        this(new Date(rs.getDate(0).getMillisSinceEpoch()), new Double[]{rs.getDouble(1), rs.getDouble(2), rs.getDouble(3), rs.getDouble(4), rs.getDouble(5), rs.getDouble(6),
+                rs.getDouble(7), rs.getDouble(8), rs.getDouble(9), rs.getDouble(10), rs.getDouble(11), rs.getDouble(12), rs.getDouble(13),
+                rs.getDouble(14), rs.getDouble(15), rs.getDouble(16), rs.getDouble(17), rs.getDouble(18), rs.getDouble(19), rs.getDouble(20),
+                rs.getDouble(21), rs.getDouble(22), rs.getDouble(23), rs.getDouble(24), rs.getDouble(25)});
     }
 
     public Date getDate() {

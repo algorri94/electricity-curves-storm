@@ -1,47 +1,36 @@
 package es.unican.electricity.curves.utils;
 
-import org.apache.commons.dbcp2.BasicDataSource;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import com.mysql.jdbc.Driver;
+import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.HostDistance;
+import com.datastax.driver.core.PoolingOptions;
+import com.datastax.driver.core.Session;
 
 /**
  * Created by algorrim on 13/03/18.
  */
 public class JDBCPool {
 
-    private static final int DEFAULT_JDBC_LOGIN_TIMEOUT = 10; //seconds
-    private static BasicDataSource pool = null;
+    private static Session pool = null;
 
     private JDBCPool(){}
 
-    private static BasicDataSource createPool(){
-        DriverManager.setLoginTimeout(DEFAULT_JDBC_LOGIN_TIMEOUT);
+    private static Session createPool(){
+        PoolingOptions poolingOptions = new PoolingOptions();
+        poolingOptions.setConnectionsPerHost(HostDistance.LOCAL, 20, 80);
+        poolingOptions.setConnectionsPerHost(HostDistance.REMOTE, 20, 80);
+        Cluster cluster = Cluster.builder()
+                .withPoolingOptions(poolingOptions)
+                .addContactPoints(CurvesConstants.DB_NODES)
+                .build();
 
-        BasicDataSource newPool = new BasicDataSource();
-        newPool.setDriverClassName("com.mysql.jdbc.Driver");
-        newPool.setUrl(CurvesConstants.JDBC_ADDRESS);
-        newPool.setUsername(CurvesConstants.DB_USERNAME);
-        newPool.setPassword(CurvesConstants.DB_PASSWD);
-        newPool.addConnectionProperty("zeroDateTimeBehavior", "convertToNull");
-        newPool.setMaxTotal(-1);
-        newPool.setMaxConnLifetimeMillis(1000 * 60 * 60);
-
-        return newPool;
+        return cluster.connect(CurvesConstants.DB_NAME);
     }
 
-    public static Connection connect(){
-        Connection conn = null;
-        try {
-            if (pool == null) {
-                pool = createPool();
-            }
-            conn = pool.getConnection();
-        } catch (SQLException e) {
-            e.printStackTrace();
+    public static Session connect(){
+        if (pool == null) {
+            pool = createPool();
         }
-        return conn;
+        return pool;
     }
 }

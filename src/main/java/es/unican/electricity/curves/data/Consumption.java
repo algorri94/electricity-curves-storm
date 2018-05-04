@@ -1,5 +1,7 @@
 package es.unican.electricity.curves.data;
 
+import com.datastax.driver.core.Row;
+
 import java.io.Serializable;
 import java.sql.Date;
 import java.sql.ResultSet;
@@ -13,12 +15,12 @@ public class Consumption implements Serializable {
     private String cups;
     private Date d_from;
     private Date d_to;
-    private Integer value;
+    private Double value;
     private Integer prl;
 
     public Consumption(){}
 
-    public Consumption(String cups, Date d_from, Date d_to, Integer value, Integer prl){
+    public Consumption(String cups, Date d_from, Date d_to, Double value, Integer prl){
         this.cups = cups;
         this.d_from = d_from;
         this.d_to = d_to;
@@ -27,7 +29,11 @@ public class Consumption implements Serializable {
     }
 
     public Consumption (ResultSet resultSet) throws SQLException {
-        this(resultSet.getString(1), resultSet.getDate(2), resultSet.getDate(3), resultSet.getInt(4), resultSet.getInt(5));
+        this(resultSet.getString(1), resultSet.getDate(2), resultSet.getDate(3), resultSet.getDouble(4), resultSet.getInt(5));
+    }
+
+    public Consumption (Row row) {
+        this(row.getString("cups"), new Date(row.getDate("f_desde").getMillisSinceEpoch()), new Date(row.getDate("f_hasta").getMillisSinceEpoch()), row.getDouble("valor"), row.getInt("prelacion"));
     }
 
     public String getCups() {
@@ -54,11 +60,11 @@ public class Consumption implements Serializable {
         this.d_to = d_to;
     }
 
-    public Integer getValue() {
+    public Double getValue() {
         return value;
     }
 
-    public void setValue(Integer value) {
+    public void setValue(Double value) {
         this.value = value;
     }
 

@@ -1,22 +1,20 @@
 package es.unican.electricity.curves.logic;
 
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.Row;
+import com.datastax.driver.core.Session;
 import es.unican.electricity.curves.data.Consumption;
 import es.unican.electricity.curves.data.Curve;
 import es.unican.electricity.curves.data.Profile;
 import es.unican.electricity.curves.utils.JDBCPool;
-import org.apache.commons.dbcp2.Utils;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.BasicOutputCollector;
 import org.apache.storm.topology.IBasicBolt;
 import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
-import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
-import java.sql.Connection;
 import java.sql.Date;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,21 +34,15 @@ public class GetData implements IBasicBolt{
 
     @Override
     public void execute(Tuple tuple, BasicOutputCollector collector) {
-        Connection conn = JDBCPool.connect();
-        try {
-            Curve curve = (Curve) tuple.getValueByField("curve");
-            curve.setBefore_select_consumption(System.currentTimeMillis());
-            Consumption consumption = getConsumption(conn, curve);
-            curve.setAfter_select_consumption(System.currentTimeMillis());
-            Profile profile = getProfile(conn, curve);
-            curve.setAfter_select_profile(System.currentTimeMillis());
-            if(consumption != null) {
-                collector.emit(tuple(curve, consumption, profile));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            Utils.closeQuietly(conn);
+        Session conn = JDBCPool.connect();
+        Curve curve = (Curve) tuple.getValueByField("curve");
+        curve.setBefore_select_consumption(System.currentTimeMillis());
+        Consumption consumption = getConsumption(conn, curve);
+        curve.setAfter_select_consumption(System.currentTimeMillis());
+        Profile profile = getProfile(conn, curve);
+        curve.setAfter_select_profile(System.currentTimeMillis());
+        if(consumption != null) {
+            collector.emit(tuple(curve, consumption, profile));
         }
     }
 
@@ -69,27 +61,27 @@ public class GetData implements IBasicBolt{
         return null;
     }
 
-    private Consumption getConsumption(Connection conn, Curve record) throws SQLException {
+    private Consumption getConsumption(Session conn, Curve record) {
         Consumption c = null;
         Date previousYear = record.getPreviousYear();
-        ResultSet rs = conn.createStatement()
-                .executeQuery("SELECT * FROM consumos WHERE cups='"+record.getCups()+"'");
-        while(rs.next() && c == null){
-            if(rs.getDate(2).compareTo(previousYear) <= 0 && rs.getDate(3).compareTo(previousYear) >= 0){
-                c = new Consumption(rs);
+        ResultSet rs = conn.execute("SELECT * FROM consumos WHERE cups='"+record.getCups()+"'");
+        for(Row row : rs){
+            if(new Date(row.getDate(1).getMillisSinceEpoch()).compareTo(previousYear) <= 0 &&
+                    new Date(row.getDate(2).getMillisSinceEpoch()).compareTo(previousYear) >= 0){
+                c = new Consumption(row);
             }
         }
         return c;
     }
 
-    private Profile getProfile(Connection conn, Curve record) throws SQLException {
+    private Profile getProfile(Session conn, Curve record) {
         Profile p = null;
         if(perfiles.get(record.getDia().toString())!=null) {
             p = perfiles.get(record.getDia().toString());
         } else {
-            ResultSet rs = conn.createStatement()
-                    .executeQuery("SELECT * FROM perfiles WHERE fecha='" + record.getDia() + "'");
-            if (rs.next()) p = new Profile(rs);
+            ResultSet rs = conn.execute("SELECT * FROM perfiles WHERE fecha='" + record.getDia() + "'");
+            Row row = rs.one();
+            if (row!=null) p = new Profile(row);
             perfiles.put(record.getDia().toString(),p);
         }
         return p;

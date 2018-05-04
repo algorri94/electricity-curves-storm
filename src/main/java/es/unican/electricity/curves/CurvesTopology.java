@@ -26,7 +26,6 @@ public class CurvesTopology {
     private static final String SAVE_CURVE_BOLT = "SAVE_CURVE_BOLT";
 
     public static void main(String[] args) throws Exception {
-
         Config config = new Config();
         config.registerSerialization(Curve.class);
         config.registerSerialization(Consumption.class);

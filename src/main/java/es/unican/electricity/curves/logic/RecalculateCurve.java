@@ -50,7 +50,8 @@ public class RecalculateCurve implements IBasicBolt{
     }
 
     private Curve recalculateCurve(Curve curve, Consumption consumption, Profile profile) {
-        Double[] calculated = Arrays.stream(profile.getValues()).map(value -> value*consumption.getValue()).toArray(Double[]::new);
+        double consumptionValue = consumption.getValue();
+        Double[] calculated = Arrays.stream(profile.getValues()).map(value -> value*consumptionValue).toArray(Double[]::new);
         Double[] values = curve.getValues();
         Integer[] prls = curve.getPrls();
         for(int i = 0; i < curve.getValues().length; i++){
